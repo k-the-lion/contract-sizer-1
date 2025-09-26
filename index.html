@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Contract Size Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <header class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-gray-900">Contract Size Calculator</h1>
+            <p class="text-gray-500 mt-1">Instantly find your correct position size.</p>
+        </header>
+
+        <div class="space-y-4">
+            <div>
+                <label for="dollarRisk" class="block text-sm font-medium text-gray-700">TP/SL Setting ($)</label>
+                <input type="number" id="dollarRisk" value="150" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+            </div>
+            <div>
+                <label for="tradeRange" class="block text-sm font-medium text-gray-700">Trade Range (Points)</label>
+                <input type="number" id="tradeRange" value="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+            </div>
+            <div>
+                <label for="pointValue" class="block text-sm font-medium text-gray-700">Point Value ($)</label>
+                <input type="number" id="pointValue" value="2.00" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t">
+            <div class="bg-blue-600 text-white p-4 rounded-lg text-center">
+                <p class="text-sm font-medium text-blue-200">NUMBER OF CONTRACTS</p>
+                <p id="numContracts" class="text-4xl font-bold">0</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const dollarRisk = parseFloat(document.getElementById('dollarRisk').value) || 0;
+            const tradeRange = parseFloat(document.getElementById('tradeRange').value) || 0;
+            const pointValue = parseFloat(document.getElementById('pointValue').value) || 0;
+
+            const riskPerContract = tradeRange * pointValue;
+            
+            let numContracts = 0;
+            if (riskPerContract > 0) {
+                numContracts = Math.floor(dollarRisk / riskPerContract);
+            }
+            
+            document.getElementById('numContracts').textContent = numContracts;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => input.addEventListener('input', calculate));
+            calculate(); // Initial calculation on page load
+        });
+    </script>
+</body>
+</html>
+
