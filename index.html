@@ -27,6 +27,11 @@
             background-color: white;
             color: rgb(17 24 39); /* text-gray-900 */
         }
+        
+        /* Make the Trade Range input look slightly different since it's now readonly */
+        #tradeRange[readonly] {
+            background-color: rgb(243 244 246); /* bg-gray-100 */
+        }
 
         label {
             color: rgb(17 24 39); /* text-gray-900 */
@@ -45,6 +50,10 @@
         }
         .dark label {
             color: rgb(209 213 219); /* text-gray-300 */
+        }
+        .dark #tradeRange[readonly] {
+            background-color: rgb(31 41 55); /* bg-gray-800 */
+            color: rgb(209 213 219);
         }
         #darkModeToggle.light {
             color: rgb(31 41 55); /* text-gray-800 */
@@ -77,15 +86,28 @@
                 <label for="dollarRisk" class="block text-sm font-medium dark:text-gray-400">TP/SL Setting ($)</label>
                 <input type="number" id="dollarRisk" value="150" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
             </div>
-            <div>
-                <label for="tradeRange" class="block text-sm font-medium dark:text-gray-400">Trade Range (Points)</label>
-                <input type="number" id="tradeRange" value="10" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+            
+            <div class="space-y-2">
+                <label for="startPrice" class="block text-sm font-medium dark:text-gray-400">Trade Range (Points)</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <input type="number" id="startPrice" placeholder="Start Price" class="block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+                    </div>
+                    <div>
+                        <input type="number" id="endPrice" placeholder="End Price" class="block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
+                    </div>
+                </div>
+                <input type="number" id="tradeRange" value="10" placeholder="Calculated Range" readonly class="block w-full rounded-md shadow-sm text-lg p-3">
             </div>
             <div>
                 <label for="instrument" class="block text-sm font-medium dark:text-gray-400">Instrument</label>
                 <select id="instrument" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
-                    <option value="2.00" selected>MNQ</option>
-                    <option value="20.00">NQ</option>
+                    <option value="2.00" selected>MNQ ($2.00/pt)</option>
+                    <option value="20.00">NQ ($20.00/pt)</option>
+                    <option value="0.50">MES ($0.50/pt)</option>
+                    <option value="5.00">ES ($5.00/pt)</option>
+                    <option value="1.00">MGC ($1.00/pt)</option>
+                    <option value="10.00">GC ($10.00/pt)</option>
                 </select>
             </div>
         </div>
@@ -101,8 +123,22 @@
     <script>
         function calculate() {
             const dollarRisk = parseFloat(document.getElementById('dollarRisk').value) || 0;
-            const tradeRange = parseFloat(document.getElementById('tradeRange').value) || 0;
+            const startPrice = parseFloat(document.getElementById('startPrice').value);
+            const endPrice = parseFloat(document.getElementById('endPrice').value);
+            const tradeRangeInput = document.getElementById('tradeRange');
             const pointValue = parseFloat(document.getElementById('instrument').value) || 0;
+
+            let tradeRange = 0;
+            
+            // LOGIC CHANGE: Check if price inputs are filled to calculate the range
+            if (!isNaN(startPrice) && !isNaN(endPrice)) {
+                // Calculate absolute difference in points
+                tradeRange = Math.abs(startPrice - endPrice); 
+                tradeRangeInput.value = tradeRange.toFixed(2); // Display the calculated range
+            } else {
+                // Fallback to use manual input value if prices aren't set
+                tradeRange = parseFloat(tradeRangeInput.value) || 0;
+            }
 
             const riskPerContract = tradeRange * pointValue;
             
@@ -119,34 +155,22 @@
             const toggleButton = document.getElementById('darkModeToggle');
             const sunIcon = document.getElementById('sunIcon');
             const moonIcon = document.getElementById('moonIcon');
-            
-            // NOTE: Manual class manipulation for body and card removed from JS,
-            // as we now rely on the dark: utility classes in the HTML (e.g., body class="bg-gray-100 dark:bg-gray-900").
-            // This makes the script cleaner and relies on standard Tailwind practice.
 
-            // Function to set the current theme and icon visibility
             function setTheme(theme) {
                 if (theme === 'dark') {
-                    // Set dark classes
                     html.classList.add('dark');
                     html.classList.remove('light');
-                    // Manual body/card class logic removed here
-                    toggleButton.classList.remove('light');
                     sunIcon.classList.add('hidden');
                     moonIcon.classList.remove('hidden');
-                } else { // Light mode
-                    // Set light classes
+                } else {
                     html.classList.remove('dark');
                     html.classList.add('light');
-                    // Manual body/card class logic removed here
-                    toggleButton.classList.add('light');
                     sunIcon.classList.remove('hidden');
                     moonIcon.classList.add('hidden');
                 }
                 localStorage.setItem('theme', theme);
             }
 
-            // --- Initial Theme Check ---
             const savedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -156,7 +180,6 @@
                 setTheme(prefersDark ? 'dark' : 'light'); 
             }
 
-            // Event listener for the toggle button
             toggleButton.addEventListener('click', () => {
                 const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -166,9 +189,15 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const inputs = document.querySelectorAll('input, select');
-            inputs.forEach(input => input.addEventListener('input', calculate));
-            calculate(); 
             
+            // Add listeners to all inputs, including the new price inputs
+            inputs.forEach(input => input.addEventListener('input', calculate));
+            
+            // Specifically add listener to the new price inputs to trigger range calculation
+            document.getElementById('startPrice').addEventListener('input', calculate);
+            document.getElementById('endPrice').addEventListener('input', calculate);
+            
+            calculate(); 
             setupDarkModeToggle(); 
         });
     </script>
