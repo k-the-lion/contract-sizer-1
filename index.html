@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contract Size Calculator</title>
+    <title>Simple Contract Size Calculator</title>
     <link rel="icon" href="/images/favicon.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
@@ -28,10 +28,16 @@
             color: rgb(17 24 39); /* text-gray-900 */
         }
         
-        /* Make the Trade Range input look slightly different since it's now readonly */
+        /* Add specific styling for when the trade range input is automatically set to readonly */
         #tradeRange[readonly] {
-            background-color: rgb(243 244 246); /* bg-gray-100 */
+            cursor: not-allowed;
+            background-color: rgb(243 244 246); /* Light grey for light mode */
         }
+        .dark #tradeRange[readonly] {
+            background-color: rgb(31 41 55); /* Dark grey for dark mode */
+            color: rgb(209 213 219);
+        }
+        
 
         label {
             color: rgb(17 24 39); /* text-gray-900 */
@@ -50,10 +56,6 @@
         }
         .dark label {
             color: rgb(209 213 219); /* text-gray-300 */
-        }
-        .dark #tradeRange[readonly] {
-            background-color: rgb(31 41 55); /* bg-gray-800 */
-            color: rgb(209 213 219);
         }
         #darkModeToggle.light {
             color: rgb(31 41 55); /* text-gray-800 */
@@ -97,8 +99,9 @@
                         <input type="number" id="endPrice" placeholder="End Price" class="block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
                     </div>
                 </div>
-                <input type="number" id="tradeRange" value="10" placeholder="Calculated Range" readonly class="block w-full rounded-md shadow-sm text-lg p-3">
+                <input type="number" id="tradeRange" value="10" placeholder="Calculated Range or Manual Entry" class="block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
             </div>
+
             <div>
                 <label for="instrument" class="block text-sm font-medium dark:text-gray-400">Instrument</label>
                 <select id="instrument" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3">
@@ -123,21 +126,33 @@
     <script>
         function calculate() {
             const dollarRisk = parseFloat(document.getElementById('dollarRisk').value) || 0;
-            const startPrice = parseFloat(document.getElementById('startPrice').value);
-            const endPrice = parseFloat(document.getElementById('endPrice').value);
+            const startPrice = document.getElementById('startPrice').value; // Keep as string to check for empty
+            const endPrice = document.getElementById('endPrice').value; // Keep as string to check for empty
             const tradeRangeInput = document.getElementById('tradeRange');
             const pointValue = parseFloat(document.getElementById('instrument').value) || 0;
 
             let tradeRange = 0;
             
-            // LOGIC CHANGE: Check if price inputs are filled to calculate the range
-            if (!isNaN(startPrice) && !isNaN(endPrice)) {
-                // Calculate absolute difference in points
-                tradeRange = Math.abs(startPrice - endPrice); 
-                tradeRangeInput.value = tradeRange.toFixed(2); // Display the calculated range
+            // Check if both price inputs contain any value (not empty strings)
+            if (startPrice.trim() !== "" && endPrice.trim() !== "") {
+                const numStartPrice = parseFloat(startPrice);
+                const numEndPrice = parseFloat(endPrice);
+
+                if (!isNaN(numStartPrice) && !isNaN(numEndPrice)) {
+                    // 1. Calculate range from prices
+                    tradeRange = Math.abs(numStartPrice - numEndPrice); 
+                    tradeRangeInput.value = tradeRange.toFixed(2); // Display the calculated range
+                    tradeRangeInput.setAttribute('readonly', true); // Make it read-only
+                } else {
+                    // Prices are partially invalid, default to manual range input
+                    tradeRangeInput.removeAttribute('readonly'); 
+                    tradeRange = parseFloat(tradeRangeInput.value) || 0;
+                }
             } else {
-                // Fallback to use manual input value if prices aren't set
-                tradeRange = parseFloat(tradeRangeInput.value) || 0;
+                // 2. Allow manual input
+                tradeRangeInput.removeAttribute('readonly'); // Make it editable
+                // Use whatever value is currently in the box (manual or initial value)
+                tradeRange = parseFloat(tradeRangeInput.value) || 0; 
             }
 
             const riskPerContract = tradeRange * pointValue;
@@ -190,10 +205,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             const inputs = document.querySelectorAll('input, select');
             
-            // Add listeners to all inputs, including the new price inputs
             inputs.forEach(input => input.addEventListener('input', calculate));
             
-            // Specifically add listener to the new price inputs to trigger range calculation
+            // Add listeners specifically to the price inputs to trigger range calculation
             document.getElementById('startPrice').addEventListener('input', calculate);
             document.getElementById('endPrice').addEventListener('input', calculate);
             
