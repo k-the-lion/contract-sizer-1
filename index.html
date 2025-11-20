@@ -8,6 +8,13 @@
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class', 
+        }
+    </script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -48,7 +55,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body id="pageBody" class="bg-gray-100 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
+<body id="pageBody" class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 transition-colors duration-300">
     
     <button id="darkModeToggle" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 text-gray-800 shadow-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors duration-300 z-10" aria-label="Toggle Dark Mode">
         <svg id="sunIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -61,7 +68,7 @@
     
     <div id="calculatorCard" class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 md:p-8 transition-colors duration-300 dark:bg-gray-800 dark:shadow-2xl">
         <header class="mb-6 text-center">
-            <h1 class="text-2xl font-bold text-gray-400 dark:text-white">Contract Size Calculator</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Contract Size Calculator</h1>
             <p class="subheader-text mt-1 dark:text-gray-400">Instantly find your correct position size.</p>
         </header>
 
@@ -84,7 +91,7 @@
         </div>
 
         <div class="mt-8 pt-6 border-t dark:border-gray-700">
-            <div class="bg-blue-600 dark:bg-indigo-600 text-white p-4 rounded-lg text-center">
+            <div class="bg-blue-600 dark:bg-indigo-600 text-white p-4 rounded-lg text-center transition-colors duration-300">
                 <p class="text-sm font-medium text-blue-200 dark:text-indigo-200">NUMBER OF CONTRACTS</p>
                 <p id="numContracts" class="text-4xl font-bold">0</p>
             </div>
@@ -109,11 +116,13 @@
 
         function setupDarkModeToggle() {
             const html = document.documentElement;
-            const body = document.getElementById('pageBody');
-            const card = document.getElementById('calculatorCard');
             const toggleButton = document.getElementById('darkModeToggle');
             const sunIcon = document.getElementById('sunIcon');
             const moonIcon = document.getElementById('moonIcon');
+            
+            // NOTE: Manual class manipulation for body and card removed from JS,
+            // as we now rely on the dark: utility classes in the HTML (e.g., body class="bg-gray-100 dark:bg-gray-900").
+            // This makes the script cleaner and relies on standard Tailwind practice.
 
             // Function to set the current theme and icon visibility
             function setTheme(theme) {
@@ -121,10 +130,7 @@
                     // Set dark classes
                     html.classList.add('dark');
                     html.classList.remove('light');
-                    body.classList.add('dark:bg-gray-900'); 
-                    body.classList.remove('bg-gray-100');
-                    card.classList.add('dark:bg-gray-800');
-                    card.classList.remove('bg-white');
+                    // Manual body/card class logic removed here
                     toggleButton.classList.remove('light');
                     sunIcon.classList.add('hidden');
                     moonIcon.classList.remove('hidden');
@@ -132,10 +138,7 @@
                     // Set light classes
                     html.classList.remove('dark');
                     html.classList.add('light');
-                    body.classList.remove('dark:bg-gray-900'); 
-                    body.classList.add('bg-gray-100');
-                    card.classList.remove('dark:bg-gray-800'); 
-                    card.classList.add('bg-white');
+                    // Manual body/card class logic removed here
                     toggleButton.classList.add('light');
                     sunIcon.classList.remove('hidden');
                     moonIcon.classList.add('hidden');
